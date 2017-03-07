@@ -69,9 +69,6 @@ def initClangComplete():
 
   # import snippets
   try:
-    # m = importlib.import_module(modulename)
-    # for v in m:
-    #   # globals[
     exec('import snippets.' + vim.eval('g:clang_snippets_engine') + ' as current_snippets')
     names =  [item for item in dir(current_snippets) if not item.startswith("__")]
     for name in names:
