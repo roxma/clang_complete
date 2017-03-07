@@ -13,9 +13,8 @@ register_source(name='clang_complete',
                 scoping=True,
                 scopes=['c','cpp'],
                 events=['BufEnter'],
-                detach=1,
                 python='python2',
-                cm_refresh_patterns=[r'[0-9a-zA-Z_#]{3,}$',r'(-\>|\.|::)[\w_]*$'],
+                cm_refresh_patterns=[r'(-\>|\.|::)$'],
 )
 
 import sys
@@ -55,8 +54,7 @@ class Source:
 
         debug = False
 
-        kwtyped = re.search(r'[0-9a-zA-Z_]*?$',typed).group(0)
-        startcol = col-len(kwtyped)
+        startcol = ctx['startcol']
 
         src = get_src(self._nvim,ctx)
         if not src.strip():
@@ -94,6 +92,6 @@ class Source:
         # logger.info("src: %s", src)
         logger.info("completion result: %s", matches)
 
-        self._nvim.call('cm#complete', info['name'], ctx, startcol, matches, True, async=True)
+        self._nvim.call('cm#complete', info['name'], ctx, startcol, matches, async=True)
 
 
