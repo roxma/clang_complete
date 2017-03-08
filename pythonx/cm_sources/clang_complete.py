@@ -6,7 +6,7 @@
 # clang python bindings only supports python2
 # https://github.com/llvm-mirror/clang/commit/abdad67b94ad4dad2d655d48ff5f81d6ccf3852e
 
-from cm import register_source, get_src
+from cm import register_source, getLogger, Base
 register_source(name='clang_complete',
                 priority=9,
                 abbreviation='c',
@@ -19,16 +19,14 @@ register_source(name='clang_complete',
 
 import sys
 import os
-import re
-import logging
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
-class Source:
+class Source(Base):
 
     def __init__(self,nvim):
 
-        self._nvim = nvim
+        Base.__init__(self,nvim)
 
         libclang_base = nvim.eval("globpath(&rtp,'plugin/clang',1)").split("\n")[0]
         libclang_base = os.path.dirname(libclang_base)
@@ -56,7 +54,7 @@ class Source:
 
         startcol = ctx['startcol']
 
-        src = get_src(self._nvim,ctx)
+        src = self.get_src(ctx)
         if not src.strip():
             return
 
@@ -79,7 +77,7 @@ class Source:
         if base != "":
             results = [x for x in results if self._libclang.getAbbr(x.string).startswith(base)]
 
-        sorting = self._nvim.eval("g:clang_sort_algo")
+        sorting = self.nvim.eval("g:clang_sort_algo")
         if sorting == 'priority':
             getPriority = lambda x: x.string.priority
             results = sorted(results, key=getPriority)
@@ -92,6 +90,6 @@ class Source:
         # logger.info("src: %s", src)
         logger.info("completion result: %s", matches)
 
-        self._nvim.call('cm#complete', info['name'], ctx, startcol, matches, async=True)
+        self.nvim.call('cm#complete', info['name'], ctx, startcol, matches, async=True)
 
 
