@@ -126,10 +126,6 @@ function! g:ClangLoadUserOptions()
   let l:option_sources = map(l:option_sources, l:remove_spaces_cmd)
 
   for l:source in l:option_sources
-    if l:source == 'gcc' || l:source == 'clang'
-      echo "'" . l:source . "' in clang_auto_user_options is deprecated."
-      continue
-    endif
     if l:source == 'path'
       call s:parsePathOption()
     elseif l:source == 'compile_commands.json'
@@ -272,44 +268,6 @@ function! s:initClangCompletePython()
   return 1
 endfunction
 
-function! s:DoPeriodicQuickFix()
-  " Don't do any superfluous reparsing.
-  if b:clang_complete_changedtick == b:changedtick
-    return
-  endif
-  let b:clang_complete_changedtick = b:changedtick
-
-  execute s:py_cmd 'updateCurrentDiagnostics()'
-  call s:ClangQuickFix()
-endfunction
-
-function! s:ClangQuickFix()
-  " Clear the bad spell, the user may have corrected them.
-  syntax clear SpellBad
-  syntax clear SpellLocal
-
-  execute s:py_cmd "vim.command('let l:list = ' + str(getCurrentQuickFixList()))"
-  execute s:py_cmd 'highlightCurrentDiagnostics()'
-
-  if g:clang_complete_copen == 1
-    " We should get back to the original buffer
-    let l:bufnr = bufnr('%')
-
-    " Workaround:
-    " http://vim.1045645.n5.nabble.com/setqflist-inconsistency-td1211423.html
-    if l:list == []
-      cclose
-    else
-      copen
-    endif
-
-    let l:winbufnr = bufwinnr(l:bufnr)
-    exe l:winbufnr . 'wincmd w'
-  endif
-  call setqflist(l:list)
-  silent doautocmd QuickFixCmdPost make
-endfunction
-
 function! s:escapeCommand(command)
     return s:isWindows() ? a:command : escape(a:command, '()')
 endfunction
@@ -320,12 +278,6 @@ function! s:isWindows()
 endfunction
 
 let b:col = 0
-
-" May be used in a mapping to update the quickfix window.
-function! g:ClangUpdateQuickFix()
-  call s:DoPeriodicQuickFix()
-  return ''
-endfunction
 
 function! g:ClangGotoDeclaration()
   call s:GotoDeclaration(0)
