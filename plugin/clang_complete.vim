@@ -15,22 +15,59 @@ let g:clang_complete_loaded = 1
 au FileType c,cpp,objc,objcpp if g:ClangCompleteInit()  | call s:ClangCompleteBuffer() | endif
 au FileType c.*,cpp.*,objc.*,objcpp.* if g:ClangCompleteInit() | call s:ClangCompleteBuffer() | endif
 
-" Store plugin path, as this is available only when sourcing the file,
-" not during a function call.
-let s:plugin_path = escape(expand('<sfile>:p:h'), '\')
 
-" Older versions of Vim can't check if a map was made with <expr>
-let s:use_maparg = v:version > 703 || (v:version == 703 && has('patch32'))
-
-if has('python')
+if has('pythonx')
+  let s:py_cmd = 'pythonx'
+elseif has('python')
   let s:py_cmd = 'python'
-  let s:pyfile_cmd = 'pyfile'
 elseif has('python3')
   let s:py_cmd = 'python3'
-  let s:pyfile_cmd = 'py3file'
 endif
 
+if !has('python') && !has('python3')
+  echoe 'clang_complete: No python support available.'
+  echoe 'Cannot use clang library'
+  echoe 'Compile vim with python support to use libclang'
+  finish
+endif
+
+" global options
+
+let g:clang_auto_select = get(g:,'clang_auto_select',0)
+
+let g:clang_close_preview = get(g:,'clang_close_preview',0)
+
+let g:clang_complete_copen = get(g:,'clang_complete_copen',0)
+
+let g:clang_hl_errors = get(g:,'clang_hl_errors',1)
+
+let g:clang_snippets_engine = 'dummy'
+
+let g:clang_user_options = get(g:,'clang_user_options','')
+
+let g:clang_trailing_placeholder = get(g:,'clang_trailing_placeholder',0)
+
+let g:clang_compilation_database = get(g:,'clang_compilation_database','')
+
+let g:clang_library_path = get(g:,'clang_library_path','')
+
+let g:clang_complete_macros = get(g:,'clang_complete_macros',0)
+
+let g:clang_complete_patterns = get(g:,'clang_complete_patterns',0)
+
+let g:clang_debug = get(g:,'clang_debug',0)
+
+let g:clang_sort_algo = get(g:,'clang_sort_algo','priority')
+
+let g:clang_auto_user_options = get(g:,'clang_auto_user_options','.clang_complete, path')
+
+let g:clang_make_default_keymappings = get(g:,'clang_make_default_keymappings',1)
+
+let g:clang_restore_cr_imap = get(g:,'clang_restore_cr_imap','iunmap <buffer> <CR>')
+
+
 function! g:ClangCompleteInit()
+
   let l:bufname = bufname("%")
   if l:bufname == ''
     return 0
@@ -40,113 +77,6 @@ function! g:ClangCompleteInit()
     echoe "clang_complete: You can't use clang binary anymore."
     echoe 'For more information see g:clang_use_library help.'
     return 0
-  endif
-
-  if !exists('g:clang_auto_select')
-    let g:clang_auto_select = 0
-  endif
-
-  if !exists('g:clang_complete_auto')
-    let g:clang_complete_auto = 1
-  endif
-
-  if !exists('g:clang_close_preview')
-    let g:clang_close_preview = 0
-  endif
-
-  if !exists('g:clang_complete_copen')
-    let g:clang_complete_copen = 0
-  endif
-
-  if !exists('g:clang_hl_errors')
-    let g:clang_hl_errors = 1
-  endif
-
-  if !exists('g:clang_periodic_quickfix')
-    let g:clang_periodic_quickfix = 0
-  endif
-
-  if !exists('g:clang_snippets') || g:clang_snippets == 0
-    let g:clang_snippets_engine = 'dummy'
-  endif
-
-  if !exists('g:clang_snippets_engine')
-    let g:clang_snippets_engine = 'clang_complete'
-  endif
-
-  if !exists('g:clang_user_options')
-    let g:clang_user_options = ''
-  endif
-
-  if !exists('g:clang_conceal_snippets')
-    let g:clang_conceal_snippets = has('conceal')
-  elseif g:clang_conceal_snippets == 1 && !has('conceal')
-    echoe 'clang_complete: conceal feature not available but requested'
-  endif
-
-  if !exists('g:clang_complete_optional_args_in_snippets')
-    let g:clang_complete_optional_args_in_snippets = 0
-  endif
-
-  if !exists('g:clang_trailing_placeholder')
-    let g:clang_trailing_placeholder = 0
-  endif
-
-  if !exists('g:clang_compilation_database')
-    let g:clang_compilation_database = ''
-  endif
-
-  if !exists('g:clang_library_path')
-    let g:clang_library_path = ''
-  endif
-
-  if !exists('g:clang_complete_macros')
-    let g:clang_complete_macros = 0
-  endif
-
-  if !exists('g:clang_complete_patterns')
-    let g:clang_complete_patterns = 0
-  endif
-
-  if !exists('g:clang_debug')
-    let g:clang_debug = 0
-  endif
-
-  if !exists('g:clang_sort_algo')
-    let g:clang_sort_algo = 'priority'
-  endif
-
-  if !exists('g:clang_auto_user_options')
-    let g:clang_auto_user_options = '.clang_complete, path'
-  endif
-
-  if !exists('g:clang_jumpto_declaration_key')
-    let g:clang_jumpto_declaration_key = '<C-]>'
-  endif
-
-  if !exists('g:clang_jumpto_declaration_in_preview_key')
-    let g:clang_jumpto_declaration_in_preview_key = '<C-W>]'
-  endif
-
-  if !exists('g:clang_jumpto_back_key')
-    let g:clang_jumpto_back_key = '<C-T>'
-  endif
-
-  if !exists('g:clang_make_default_keymappings')
-    let g:clang_make_default_keymappings = 1
-  endif
-
-  if !exists('g:clang_restore_cr_imap')
-    let g:clang_restore_cr_imap = 'iunmap <buffer> <CR>'
-  endif
-
-  if !exists('g:clang_omnicppcomplete_compliance')
-    let g:clang_omnicppcomplete_compliance = 0
-  endif
-
-  if g:clang_omnicppcomplete_compliance == 1
-    let g:clang_complete_auto = 0
-    let g:clang_make_default_keymappings = 0
   endif
 
   call g:ClangLoadUserOptions()
@@ -167,28 +97,12 @@ function! g:ClangCompleteInit()
     return 0
   endif
 
-  execute s:py_cmd 'snippetsInit()'
-
   return 1
 
 endfunction
 
 " key mappings, options, autocmd for buffer
 function! s:ClangCompleteBuffer()
-
-  if g:clang_make_default_keymappings == 1
-    inoremap <expr> <buffer> <C-X><C-U> <SID>LaunchCompletion()
-    inoremap <expr> <buffer> . <SID>CompleteDot()
-    inoremap <expr> <buffer> > <SID>CompleteArrow()
-    inoremap <expr> <buffer> : <SID>CompleteColon()
-    execute "nnoremap <buffer> <silent> " . g:clang_jumpto_declaration_key . " :call <SID>GotoDeclaration(0)<CR><Esc>"
-    execute "nnoremap <buffer> <silent> " . g:clang_jumpto_declaration_in_preview_key . " :call <SID>GotoDeclaration(1)<CR><Esc>"
-    execute "nnoremap <buffer> <silent> " . g:clang_jumpto_back_key . " <C-O>"
-  endif
-
-  if g:clang_omnicppcomplete_compliance == 1
-    inoremap <expr> <buffer> <C-X><C-U> <SID>LaunchCompletion()
-  endif
 
   " Force menuone. Without it, when there's only one completion result,
   " it can be confusing (not completing and no popup)
@@ -201,17 +115,6 @@ function! s:ClangCompleteBuffer()
   augroup ClangComplete
     autocmd! * <buffer>
   augroup end
-
-  if g:clang_periodic_quickfix == 1
-    augroup ClangComplete
-      au CursorHold,CursorHoldI <buffer> call <SID>DoPeriodicQuickFix()
-    augroup end
-  endif
-
-  setlocal completefunc=ClangComplete
-  if g:clang_omnicppcomplete_compliance == 0
-    setlocal omnifunc=ClangComplete
-  endif
 
 endfunc
 
@@ -355,20 +258,10 @@ function! s:parsePathOption()
 endfunction
 
 function! s:initClangCompletePython()
-  if !has('python') && !has('python3')
-    echoe 'clang_complete: No python support available.'
-    echoe 'Cannot use clang library'
-    echoe 'Compile vim with python support to use libclang'
-    return 0
-  endif
 
   " Only parse the python library once
   if !exists('s:libclang_loaded')
-    execute s:py_cmd 'import sys'
-
-    execute s:py_cmd 'sys.path = ["' . s:plugin_path . '"] + sys.path'
-    execute s:pyfile_cmd fnameescape(s:plugin_path) . '/libclang.py'
-
+    execute s:py_cmd 'from libclang import *'
     execute s:py_cmd "vim.command('let l:res = ' + str(initClangComplete()))"
     if l:res == 0
       return 0
@@ -427,191 +320,6 @@ function! s:isWindows()
 endfunction
 
 let b:col = 0
-
-function! ClangComplete(findstart, base)
-  if a:findstart
-    let l:line = getline('.')
-    let l:start = col('.') - 1
-    let l:wsstart = l:start
-    if l:line[l:wsstart - 1] =~ '\s'
-      while l:wsstart > 0 && l:line[l:wsstart - 1] =~ '\s'
-        let l:wsstart -= 1
-      endwhile
-    endif
-    while l:start > 0 && l:line[l:start - 1] =~ '\i'
-      let l:start -= 1
-    endwhile
-    let b:col = l:start + 1
-    return l:start
-  else
-    if g:clang_debug == 1
-      let l:time_start = reltime()
-    endif
-
-    execute s:py_cmd 'snippetsReset()'
-
-    execute s:py_cmd "completions, timer = getCurrentCompletions(vim.eval('a:base'))"
-    execute s:py_cmd "vim.command('let l:res = ' + completions)"
-    execute s:py_cmd "timer.registerEvent('Load into vimscript')"
-
-    if g:clang_make_default_keymappings == 1
-      if s:use_maparg
-        let s:old_cr = maparg('<CR>', 'i', 0, 1)
-      else
-        let s:old_snr = matchstr(maparg('<CR>', 'i'), '<SNR>\d\+_')
-      endif
-      inoremap <expr> <buffer> <C-Y> <SID>HandlePossibleSelectionCtrlY()
-      inoremap <expr> <buffer> <CR> <SID>HandlePossibleSelectionEnter()
-    endif
-    augroup ClangComplete
-      au CursorMovedI <buffer> call <SID>TriggerSnippet()
-      if exists('##CompleteDone')
-        au CompleteDone,InsertLeave <buffer> call <SID>StopMonitoring()
-      else
-        au InsertLeave <buffer> call <SID>StopMonitoring()
-      endif
-    augroup end
-    let b:snippet_chosen = 0
-
-    execute s:py_cmd 'timer.finish()'
-
-    if g:clang_debug == 1
-      echom 'clang_complete: completion time ' . split(reltimestr(reltime(l:time_start)))[0]
-    endif
-    return l:res
-  endif
-endfunction
-
-function! s:HandlePossibleSelectionEnter()
-  if pumvisible()
-    let b:snippet_chosen = 1
-    return "\<C-Y>"
-  end
-  return "\<CR>"
-endfunction
-
-function! s:HandlePossibleSelectionCtrlY()
-  if pumvisible()
-    let b:snippet_chosen = 1
-  end
-  return "\<C-Y>"
-endfunction
-
-function! s:StopMonitoring()
-  if b:snippet_chosen
-    call s:TriggerSnippet()
-    return
-  endif
-
-  if g:clang_make_default_keymappings == 1
-    " Restore original return and Ctrl-Y key mappings
-
-    if s:use_maparg
-      if get(s:old_cr, 'buffer', 0)
-        silent! execute s:old_cr.mode.
-            \ (s:old_cr.noremap ? 'noremap '  : 'map').
-            \ (s:old_cr.buffer  ? '<buffer> ' : '').
-            \ (s:old_cr.expr    ? '<expr> '   : '').
-            \ (s:old_cr.nowait  ? '<nowait> ' : '').
-            \ s:old_cr.lhs.' '.
-            \ substitute(s:old_cr.rhs, '<SID>', '<SNR>'.s:old_cr.sid.'_', 'g')
-      else
-        silent! iunmap <buffer> <CR>
-      endif
-    else
-      silent! execute substitute(g:clang_restore_cr_imap, '<SID>', s:old_snr, 'g')
-    endif
-
-    silent! iunmap <buffer> <C-Y>
-  endif
-
-  augroup ClangComplete
-    au! CursorMovedI,InsertLeave <buffer>
-    if exists('##CompleteDone')
-      au! CompleteDone <buffer>
-    endif
-  augroup END
-endfunction
-
-function! s:TriggerSnippet()
-  " Dont bother doing anything until we're sure the user exited the menu
-  if !b:snippet_chosen
-    return
-  endif
-
-  " Stop monitoring as we'll trigger a snippet
-  let b:snippet_chosen = 0
-  call s:StopMonitoring()
-
-  " Trigger the snippet
-  execute s:py_cmd 'snippetsTrigger()'
-
-  if g:clang_close_preview
-    pclose
-  endif
-endfunction
-
-function! s:ShouldComplete()
-  if (getline('.') =~ '#\s*\(include\|import\)')
-    return 0
-  else
-    if col('.') == 1
-      return 1
-    endif
-    for l:id in synstack(line('.'), col('.') - 1)
-      if match(synIDattr(l:id, 'name'), '\CComment\|String\|Number')
-            \ != -1
-        return 0
-      endif
-    endfor
-    return 1
-  endif
-endfunction
-
-function! s:LaunchCompletion()
-  let l:result = ""
-  if s:ShouldComplete()
-    let l:result = "\<C-X>\<C-U>"
-    if g:clang_auto_select != 2
-      let l:result .= "\<C-P>"
-    endif
-    if g:clang_auto_select == 1
-      let l:result .= "\<C-R>=(pumvisible() ? \"\\<Down>\" : '')\<CR>"
-    endif
-  endif
-  return l:result
-endfunction
-
-function! s:CompleteDot()
-  if g:clang_complete_auto == 1
-    return '.' . s:LaunchCompletion()
-  endif
-  return '.'
-endfunction
-
-function! s:CompleteArrow()
-  if g:clang_complete_auto != 1 || getline('.')[col('.') - 2] != '-'
-    return '>'
-  endif
-  return '>' . s:LaunchCompletion()
-endfunction
-
-function! s:CompleteColon()
-  if g:clang_complete_auto != 1 || getline('.')[col('.') - 2] != ':'
-    return ':'
-  endif
-  return ':' . s:LaunchCompletion()
-endfunction
-
-function! s:GotoDeclaration(preview)
-  try
-    execute s:py_cmd "gotoDeclaration(vim.eval('a:preview') == '1')"
-  catch /^Vim\%((\a\+)\)\=:E37/
-    echoe "The current file is not saved, and 'hidden' is not set."
-          \ "Either save the file or add 'set hidden' in your vimrc."
-  endtry
-  return ''
-endfunction
 
 " May be used in a mapping to update the quickfix window.
 function! g:ClangUpdateQuickFix()

@@ -409,7 +409,7 @@ def formatResult(result):
   abbr = ""
   word = ""
   info = ""
-  place_markers_for_optional_args = int(vim.eval("g:clang_complete_optional_args_in_snippets")) == 1
+  place_markers_for_optional_args = 0
 
   def roll_out_optional(chunks):
     result = []
