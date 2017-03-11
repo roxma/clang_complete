@@ -262,7 +262,6 @@ function! s:initClangCompletePython()
     endif
     let s:libclang_loaded = 1
   endif
-  execute s:py_cmd 'WarmupCache()'
   return 1
 endfunction
 

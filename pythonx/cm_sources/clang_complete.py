@@ -61,11 +61,12 @@ class Source(Base):
         file = (path, str(src))
 
         params = self._libclang.getCompileParams(path,ctx['scope'])
-        t = self._libclang.CompleteThread(lnum, startcol, file, path, params)
-        t.run()
-        cr = t.result
+        cr = self._libclang.getCurrentCompletionResults(lnum,
+                                                        startcol,
+                                                        params['args'],
+                                                        file,
+                                                        path)
 
-        cr = t.result
         if cr is None:
             logger.error("Cannot parse this source file. The following arguments are used for clang: %s", params['args'])
             return
