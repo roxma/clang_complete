@@ -8,8 +8,7 @@ import os
 import shlex
 import importlib
 import logging
-
-from kinds import kinds
+import sys
 
 def getLogger(name):
     def get_loglevel():
@@ -35,7 +34,6 @@ def getLogger(name):
 logger = getLogger(__name__)
 
 def decode(value):
-  import sys
   if sys.version_info[0] == 2:
     return value
 
@@ -408,11 +406,7 @@ def formatResult(result):
   completion['abbr'] = abbr
   completion['menu'] = menu
   completion['info'] = info
-  completion['dup'] = 1
-
-  # Replace the number that represents a specific kind with a better
-  # textual representation.
-  completion['kind'] = kinds[result.cursorKind]
+  completion['dup']  = 1
 
   return completion
 
