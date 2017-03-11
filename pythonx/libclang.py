@@ -67,20 +67,6 @@ def getBuiltinHeaderPath(library_path):
 
 def initClangComplete():
 
-  # import snippets
-  try:
-    exec('import snippets.' + vim.eval('g:clang_snippets_engine') + ' as current_snippets')
-    names =  [item for item in dir(current_snippets) if not item.startswith("__")]
-    for name in names:
-      # inject globals from snippets
-      globals()[name] = getattr(current_snippets,name)
-  except:
-    # Oh yeah, vimscript rocks!
-    # Putting that echoe inside the catch, will throw an error, and
-    # display spurious unwanted errors
-    vim.command("echoe 'Snippets engine ' . g:clang_snippets_engine . ' not found'")
-    return 0
-
   global index
 
   clang_complete_flags = vim.eval('g:clang_complete_lib_flags')
@@ -441,11 +427,11 @@ def formatResult(result):
     if chunk.isKindOptional():
       for optional_arg in roll_out_optional(chunk.string):
         if place_markers_for_optional_args:
-          word += snippetsFormatPlaceHolder(optional_arg)
+          word += ''
         info += optional_arg + "=?"
 
     if chunk.isKindPlaceHolder():
-      word += snippetsFormatPlaceHolder(chunk_spelling)
+      word += ''
     else:
       word += chunk_spelling
 
@@ -456,7 +442,7 @@ def formatResult(result):
   if returnValue:
     menu = decode(returnValue.spelling) + " " + menu
 
-  completion['word'] = snippetsAddSnippet(info, word, abbr)
+  completion['word'] = abbr
   completion['abbr'] = abbr
   completion['menu'] = menu
   completion['info'] = info

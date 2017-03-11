@@ -41,8 +41,6 @@ let g:clang_complete_copen = get(g:,'clang_complete_copen',0)
 
 let g:clang_hl_errors = get(g:,'clang_hl_errors',1)
 
-let g:clang_snippets_engine = 'dummy'
-
 let g:clang_user_options = get(g:,'clang_user_options','')
 
 let g:clang_trailing_placeholder = get(g:,'clang_trailing_placeholder',0)
