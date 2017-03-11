@@ -12,11 +12,13 @@ Here's some of the work in brief.
 
 - Builtin parameter expansion snippet engine removed in favor of ultisnips.
 - Quickfix feature removed in favor of neomake or syntastic, etc.
-- Builtin `omnifunc`/`completefunc` with threading removed in favor of NCM.
+- Builtin `omnifunc`/`completefunc` with threading, and some default insert
+  mode mapping removed, in favor of NCM.
 
 ## Requirements
 
-- `clang` installed on your system. (eg. `yum install clang`)
+- `clang` installed on your system. (eg. `yum install clang clang-devel` or
+  `apt-get install libclang-dev`)
 
 ## Installation
 

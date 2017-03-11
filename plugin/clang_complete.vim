@@ -33,17 +33,9 @@ endif
 
 " global options
 
-let g:clang_auto_select = get(g:,'clang_auto_select',0)
-
-let g:clang_close_preview = get(g:,'clang_close_preview',0)
-
 let g:clang_complete_copen = get(g:,'clang_complete_copen',0)
 
-let g:clang_hl_errors = get(g:,'clang_hl_errors',1)
-
 let g:clang_user_options = get(g:,'clang_user_options','')
-
-let g:clang_trailing_placeholder = get(g:,'clang_trailing_placeholder',0)
 
 let g:clang_compilation_database = get(g:,'clang_compilation_database','')
 
@@ -54,10 +46,6 @@ let g:clang_complete_macros = get(g:,'clang_complete_macros',0)
 let g:clang_complete_patterns = get(g:,'clang_complete_patterns',0)
 
 let g:clang_auto_user_options = get(g:,'clang_auto_user_options','.clang_complete, path')
-
-let g:clang_make_default_keymappings = get(g:,'clang_make_default_keymappings',1)
-
-let g:clang_restore_cr_imap = get(g:,'clang_restore_cr_imap','iunmap <buffer> <CR>')
 
 let g:clang_complete_lib_flags = 0
 
@@ -86,13 +74,6 @@ endfunction
 
 " key mappings, options, autocmd for buffer
 function! s:ClangCompleteBuffer()
-
-  " Force menuone. Without it, when there's only one completion result,
-  " it can be confusing (not completing and no popup)
-  if g:clang_auto_select != 2
-    set completeopt-=menu
-    set completeopt+=menuone
-  endif
 
   " Disable every autocmd that could have been set for this buffer
   augroup ClangComplete
