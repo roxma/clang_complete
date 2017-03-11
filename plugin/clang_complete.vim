@@ -255,8 +255,9 @@ function! s:initClangCompletePython()
 
   " Only parse the python library once
   if !exists('s:libclang_loaded')
-    execute s:py_cmd 'from libclang import *'
-    execute s:py_cmd "vim.command('let l:res = ' + str(initClangComplete()))"
+    execute s:py_cmd 'import libclang'
+    execute s:py_cmd 'import vim'
+    execute s:py_cmd "vim.command('let l:res = ' + str(libclang.initClangComplete()))"
     if l:res == 0
       return 0
     endif
@@ -278,7 +279,7 @@ let b:col = 0
 
 function! s:GotoDeclaration(preview)
   try
-    execute s:py_cmd "gotoDeclaration(vim.eval('a:preview') == '1')"
+    execute s:py_cmd "libclang.gotoDeclaration(vim.eval('a:preview') == '1')"
   catch /^Vim\%((\a\+)\)\=:E37/
     echoe "The current file is not saved, and 'hidden' is not set."
           \ "Either save the file or add 'set hidden' in your vimrc."
