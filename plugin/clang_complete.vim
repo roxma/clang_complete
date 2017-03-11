@@ -276,6 +276,16 @@ endfunction
 
 let b:col = 0
 
+function! s:GotoDeclaration(preview)
+  try
+    execute s:py_cmd "gotoDeclaration(vim.eval('a:preview') == '1')"
+  catch /^Vim\%((\a\+)\)\=:E37/
+    echoe "The current file is not saved, and 'hidden' is not set."
+          \ "Either save the file or add 'set hidden' in your vimrc."
+  endtry
+  return ''
+endfunction
+
 function! g:ClangGotoDeclaration()
   call s:GotoDeclaration(0)
   return ''
