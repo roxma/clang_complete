@@ -53,41 +53,28 @@ let g:clang_complete_macros = get(g:,'clang_complete_macros',0)
 
 let g:clang_complete_patterns = get(g:,'clang_complete_patterns',0)
 
-let g:clang_sort_algo = get(g:,'clang_sort_algo','priority')
-
 let g:clang_auto_user_options = get(g:,'clang_auto_user_options','.clang_complete, path')
 
 let g:clang_make_default_keymappings = get(g:,'clang_make_default_keymappings',1)
 
 let g:clang_restore_cr_imap = get(g:,'clang_restore_cr_imap','iunmap <buffer> <CR>')
 
+let g:clang_complete_lib_flags = 0
+
+if g:clang_complete_macros == 1
+  let g:clang_complete_lib_flags = 1
+endif
+
+if g:clang_complete_patterns == 1
+  let g:clang_complete_lib_flags += 2
+endif
+
 
 function! g:ClangCompleteInit()
-
-  let l:bufname = bufname("%")
-  if l:bufname == ''
-    return 0
-  endif
-
-  if exists('g:clang_use_library') && g:clang_use_library == 0
-    echoe "clang_complete: You can't use clang binary anymore."
-    echoe 'For more information see g:clang_use_library help.'
-    return 0
-  endif
 
   call g:ClangLoadUserOptions()
 
   let b:clang_complete_changedtick = b:changedtick
-
-  let g:clang_complete_lib_flags = 0
-
-  if g:clang_complete_macros == 1
-    let g:clang_complete_lib_flags = 1
-  endif
-
-  if g:clang_complete_patterns == 1
-    let g:clang_complete_lib_flags += 2
-  endif
 
   if s:initClangCompletePython() != 1
     return 0
@@ -253,9 +240,10 @@ function! s:initClangCompletePython()
 
   " Only parse the python library once
   if !exists('s:libclang_loaded')
-    execute s:py_cmd 'import libclang'
+    execute s:py_cmd 'from libclang import ClangWrapper'
     execute s:py_cmd 'import vim'
-    execute s:py_cmd "vim.command('let l:res = ' + str(libclang.initClangComplete()))"
+    execute s:py_cmd 'clangWrapper = ClangWrapper(vim)'
+    execute s:py_cmd "vim.command('let l:res = ' + str(clangWrapper.init()))"
     if l:res == 0
       return 0
     endif
@@ -277,7 +265,7 @@ let b:col = 0
 
 function! s:GotoDeclaration(preview)
   try
-    execute s:py_cmd "libclang.gotoDeclaration(vim.eval('a:preview') == '1')"
+    execute s:py_cmd "clangWrapper.gotoDeclaration(vim.eval('a:preview') == '1')"
   catch /^Vim\%((\a\+)\)\=:E37/
     echoe "The current file is not saved, and 'hidden' is not set."
           \ "Either save the file or add 'set hidden' in your vimrc."

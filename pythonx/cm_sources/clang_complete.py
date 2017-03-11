@@ -19,6 +19,7 @@ register_source(name='clang_complete',
 
 import sys
 import os
+import libclang
 
 logger = getLogger(__name__)
 
@@ -35,14 +36,13 @@ class Source(Base):
 
         # hack, libclang has 'import vim'
         sys.modules['vim'] = nvim
-        import libclang
-        self._libclang = libclang
+        self._clang_wrapper = libclang.ClangWrapper(nvim)
 
         # init global variables for plugin/clang_complete.vim
         nvim.call('g:ClangCompleteInit')
 
-        libclang.initClangComplete()
-        
+        self._clang_wrapper.init()
+
     def cm_refresh(self,info,ctx,*args):
 
         lnum = ctx['lnum']
@@ -60,12 +60,12 @@ class Source(Base):
 
         file = (path, str(src))
 
-        params = self._libclang.getCompileParams(path,ctx['scope'])
-        cr = self._libclang.getCurrentCompletionResults(lnum,
-                                                        startcol,
-                                                        params['args'],
-                                                        file,
-                                                        path)
+        params = self._clang_wrapper.getCompileParams(path,ctx['scope'])
+        cr = self._clang_wrapper.getCurrentCompletionResults(lnum,
+                                                             startcol,
+                                                             params['args'],
+                                                             file,
+                                                             path)
 
         if cr is None:
             logger.error("Cannot parse this source file. The following arguments are used for clang: %s", params['args'])
@@ -75,17 +75,9 @@ class Source(Base):
 
         base = typed[startcol-1:]
         if base != "":
-            results = [x for x in results if self._libclang.getAbbr(x.string).startswith(base)]
+            results = [x for x in results if self._clang_wrapper.getAbbr(x.string).startswith(base)]
 
-        sorting = self.nvim.eval("g:clang_sort_algo")
-        if sorting == 'priority':
-            getPriority = lambda x: x.string.priority
-            results = sorted(results, key=getPriority)
-        if sorting == 'alpha':
-            getAbbrevation = lambda x: self._libclang.getAbbr(x.string).lower()
-            results = sorted(results, key=getAbbrevation)
-
-        matches = list(map(self._libclang.formatResult, results))
+        matches = list(map(self._clang_wrapper.formatResult, results))
 
         # logger.info("src: %s", src)
         logger.info("completion result: %s", matches)
