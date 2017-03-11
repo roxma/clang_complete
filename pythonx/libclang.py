@@ -95,8 +95,6 @@ def initClangComplete():
   library_path = vim.eval('g:clang_library_path')
   clang_compilation_database = vim.eval('g:clang_compilation_database')
 
-  debug = int(vim.eval("g:clang_debug")) == 1
-
   if library_path:
     if os.path.isdir(library_path):
       Config.set_library_path(library_path)
@@ -112,11 +110,6 @@ def initClangComplete():
       suggestion = "Are you sure '%s' contains libclang?" % library_path
     else:
       suggestion = "Consider setting g:clang_library_path."
-
-    if debug:
-      exception_msg = str(e)
-    else:
-      exception_msg = ''
 
     logger.exception("Loading libclang failed, completion won't be available. %s %s ",
                      suggestion,
@@ -263,8 +256,6 @@ def getCompileParams(fileName,filetype=None):
            'cwd' : params['cwd'] }
 
 def updateCurrentDiagnostics():
-  global debug
-  debug = int(vim.eval("g:clang_debug")) == 1
   params = getCompileParams(vim.current.buffer.name)
 
   with libclangLock:
@@ -369,8 +360,6 @@ def jumpToLocation(filename, line, column, preview):
     vim.current.window.cursor = (line, column - 1)
 
 def gotoDeclaration(preview=True):
-  global debug
-  debug = int(vim.eval("g:clang_debug")) == 1
   params = getCompileParams(vim.current.buffer.name)
   line, col = vim.current.window.cursor
 

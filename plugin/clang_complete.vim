@@ -53,8 +53,6 @@ let g:clang_complete_macros = get(g:,'clang_complete_macros',0)
 
 let g:clang_complete_patterns = get(g:,'clang_complete_patterns',0)
 
-let g:clang_debug = get(g:,'clang_debug',0)
-
 let g:clang_sort_algo = get(g:,'clang_sort_algo','priority')
 
 let g:clang_auto_user_options = get(g:,'clang_auto_user_options','.clang_complete, path')
