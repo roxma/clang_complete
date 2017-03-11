@@ -7,8 +7,32 @@ import threading
 import os
 import shlex
 import importlib
+import logging
 
 from kinds import kinds
+
+def getLogger(name):
+    def get_loglevel():
+        # logging setup
+        level = logging.INFO
+        if 'NVIM_PYTHON_LOG_LEVEL' in os.environ:
+            l = getattr(logging,
+                    os.environ['NVIM_PYTHON_LOG_LEVEL'].strip(),
+                    level)
+            if isinstance(l, int):
+                level = l
+        if 'NVIM_NCM_LOG_LEVEL' in os.environ:
+            l = getattr(logging,
+                    os.environ['NVIM_NCM_LOG_LEVEL'].strip(),
+                    level)
+            if isinstance(l, int):
+                level = l
+        return level
+    logger = logging.getLogger(__name__)
+    logger.setLevel(get_loglevel())
+    return logger
+
+logger = getLogger(__name__)
 
 def decode(value):
   import sys
@@ -96,9 +120,9 @@ def initClangComplete():
     else:
       exception_msg = ''
 
-    print('''Loading libclang failed, completion won't be available. %s
-    %s
-    ''' % (suggestion, exception_msg))
+    logger.exception("Loading libclang failed, completion won't be available. %s %s ",
+                     suggestion,
+                     exception_msg)
     return 0
 
   global builtinHeaderPath
@@ -107,9 +131,7 @@ def initClangComplete():
     builtinHeaderPath = getBuiltinHeaderPath(library_path)
 
     if not builtinHeaderPath:
-      print("WARNING: libclang can not find the builtin includes.")
-      print("         This will cause slow code completion.")
-      print("         Please report the problem.")
+      logger.warn("libclang find builtin header path failed: %s", builtinHeaderPath)
 
   global translationUnits
   translationUnits = dict()
@@ -124,79 +146,25 @@ def initClangComplete():
   libclangLock = threading.Lock()
   return 1
 
+
 # Get a tuple (fileName, fileContent) for the file opened in the current
 # vim buffer. The fileContent contains the unsafed buffer content.
 def getCurrentFile():
   file = "\n".join(vim.current.buffer[:] + ["\n"])
   return (vim.current.buffer.name, file)
 
-class CodeCompleteTimer:
-  def __init__(self, debug, file, line, column, params):
-    self._debug = debug
 
-    if not debug:
-      return
-
-    content = vim.current.line
-    print(" ")
-    print("libclang code completion")
-    print("========================")
-    print("Command: clang %s -fsyntax-only " % " ".join(decode(params['args'])), end=' ')
-    print("-Xclang -code-completion-at=%s:%d:%d %s"
-       % (file, line, column, file))
-    print("cwd: %s" % params['cwd'])
-    print("File: %s" % file)
-    print("Line: %d, Column: %d" % (line, column))
-    print(" ")
-    print("%s" % content)
-
-    print(" ")
-
-    current = time.time()
-    self._start = current
-    self._last = current
-    self._events = []
-
-  def registerEvent(self, event):
-    if not self._debug:
-      return
-
-    current = time.time()
-    since_last = current - self._last
-    self._last = current
-    self._events.append((event, since_last))
-
-  def finish(self):
-    if not self._debug:
-      return
-
-    overall = self._last - self._start
-
-    for event in self._events:
-      name, since_last = event
-      percent = 1 / overall * since_last * 100
-      print("libclang code completion - %25s: %.3fs (%5.1f%%)" % \
-        (name, since_last, percent))
-
-    print(" ")
-    print("Overall: %.3f s" % overall)
-    print("========================")
-    print(" ")
-
-def getCurrentTranslationUnit(args, currentFile, fileName, timer,
-                              update = False):
+def getCurrentTranslationUnit(args, currentFile, fileName, update = False):
   tu = translationUnits.get(fileName)
   if tu != None:
     if update:
       tu.reparse([currentFile])
-      timer.registerEvent("Reparsing")
     return tu
 
   flags = TranslationUnit.PARSE_PRECOMPILED_PREAMBLE | \
           TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD
   try:
     tu = index.parse(fileName, args, [currentFile], flags)
-    timer.registerEvent("First parse")
   except TranslationUnitLoadError as e:
     return None
 
@@ -206,7 +174,6 @@ def getCurrentTranslationUnit(args, currentFile, fileName, timer,
   # This should be done by index.parse(), however it is not.
   # So we need to reparse ourselves.
   tu.reparse([currentFile])
-  timer.registerEvent("Generate PCH cache")
   return tu
 
 def splitOptions(options):
@@ -368,25 +335,20 @@ def updateCurrentDiagnostics():
   global debug
   debug = int(vim.eval("g:clang_debug")) == 1
   params = getCompileParams(vim.current.buffer.name)
-  timer = CodeCompleteTimer(debug, vim.current.buffer.name, -1, -1, params)
 
   with libclangLock:
     getCurrentTranslationUnit(params['args'], getCurrentFile(),
-                              vim.current.buffer.name, timer, update = True)
-  timer.finish()
+                              vim.current.buffer.name, update = True)
 
-def getCurrentCompletionResults(line, column, args, currentFile, fileName,
-                                timer):
+def getCurrentCompletionResults(line, column, args, currentFile, fileName):
 
-  tu = getCurrentTranslationUnit(args, currentFile, fileName, timer)
-  timer.registerEvent("Get TU")
+  tu = getCurrentTranslationUnit(args, currentFile, fileName)
 
   if tu == None:
     return None
 
   cr = tu.codeComplete(fileName, line, column, [currentFile],
       complete_flags)
-  timer.registerEvent("Code Complete")
   return cr
 
 def formatResult(result):
@@ -456,7 +418,7 @@ def formatResult(result):
 
 
 class CompleteThread(threading.Thread):
-  def __init__(self, line, column, currentFile, fileName, params, timer):
+  def __init__(self, line, column, currentFile, fileName, params):
     threading.Thread.__init__(self)
     # Complete threads are daemon threads. Python and consequently vim does not
     # wait for daemon threads to finish execution when existing itself. As
@@ -471,7 +433,6 @@ class CompleteThread(threading.Thread):
     self.result = None
     self.args = params['args']
     self.cwd = params['cwd']
-    self.timer = timer
 
   def run(self):
     with libclangLock:
@@ -483,18 +444,16 @@ class CompleteThread(threading.Thread):
         # not locked The user does not see any delay, as we just pause
         # a background thread.
         time.sleep(0.1)
-        getCurrentTranslationUnit(self.args, self.currentFile, self.fileName,
-                                  self.timer)
+        getCurrentTranslationUnit(self.args, self.currentFile, self.fileName)
       else:
         self.result = getCurrentCompletionResults(self.line, self.column,
                                                   self.args, self.currentFile,
-                                                  self.fileName, self.timer)
+                                                  self.fileName)
 
 def WarmupCache():
   params = getCompileParams(vim.current.buffer.name)
-  timer = CodeCompleteTimer(0, "", -1, -1, params)
   t = CompleteThread(-1, -1, getCurrentFile(), vim.current.buffer.name,
-                     params, timer)
+                     params)
   t.start()
 
 def getCurrentCompletions(base):
@@ -505,32 +464,25 @@ def getCurrentCompletions(base):
   column = int(vim.eval("b:col"))
   params = getCompileParams(vim.current.buffer.name)
 
-  timer = CodeCompleteTimer(debug, vim.current.buffer.name, line, column,
-                            params)
-
   t = CompleteThread(line, column, getCurrentFile(), vim.current.buffer.name,
-                     params, timer)
+                     params)
   t.start()
   while t.isAlive():
     t.join(0.01)
     cancel = int(vim.eval('complete_check()'))
     if cancel != 0:
-      return (str([]), timer)
+      return str([])
 
   cr = t.result
   if cr is None:
     print("Cannot parse this source file. The following arguments "
         + "are used for clang: " + " ".join(decode(params['args'])))
-    return (str([]), timer)
+    return str([])
 
   results = cr.results
 
-  timer.registerEvent("Count # Results (%s)" % str(len(results)))
-
   if base != "":
     results = [x for x in results if getAbbr(x.string).startswith(base)]
-
-  timer.registerEvent("Filter")
 
   if sorting == 'priority':
     getPriority = lambda x: x.string.priority
@@ -539,12 +491,9 @@ def getCurrentCompletions(base):
     getAbbrevation = lambda x: getAbbr(x.string).lower()
     results = sorted(results, key=getAbbrevation)
 
-  timer.registerEvent("Sort")
-
   result = list(map(formatResult, results))
 
-  timer.registerEvent("Format")
-  return (str(result), timer)
+  return str(result)
 
 def getAbbr(strings):
   for chunks in strings:
@@ -575,11 +524,10 @@ def gotoDeclaration(preview=True):
   debug = int(vim.eval("g:clang_debug")) == 1
   params = getCompileParams(vim.current.buffer.name)
   line, col = vim.current.window.cursor
-  timer = CodeCompleteTimer(debug, vim.current.buffer.name, line, col, params)
 
   with libclangLock:
     tu = getCurrentTranslationUnit(params['args'], getCurrentFile(),
-                                   vim.current.buffer.name, timer,
+                                   vim.current.buffer.name,
                                    update = True)
     if tu is None:
       print("Couldn't get the TranslationUnit")
@@ -596,7 +544,5 @@ def gotoDeclaration(preview=True):
         if loc.file is not None:
           jumpToLocation(loc.file.name, loc.line, loc.column, preview)
         break
-
-  timer.finish()
 
 # vim: set ts=2 sts=2 sw=2 expandtab :
