@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 from clang.cindex import Config, Index, CompilationDatabase, TranslationUnit, File, SourceLocation, Cursor, TranslationUnitLoadError
+from clang.cindex import CodeCompletionResult
 import time
 import threading
 import os
@@ -185,8 +186,7 @@ class ClangWrapper():
     if tu == None:
       return None
 
-    cr = tu.codeComplete(fileName, line, column, [currentFile],
-                         self.complete_flags)
+    cr = tu.codeComplete(fileName, line, column, [currentFile], self.complete_flags)
     return cr
 
   def getCurrentTranslationUnit(self, args, currentFile, fileName, update = False):
@@ -261,14 +261,15 @@ class ClangWrapper():
     # accordance with the POSIX standard
     return shlex.split(options)
 
-  def formatResult(self, result):
+  def format_complete_item(self, result):
+    """
+    @type result:  CodeCompletionResult
+    """
 
-    completion = dict()
     returnValue = None
     abbr = ""
-    word = ""
+    snippet = ""
     info = ""
-    place_markers_for_optional_args = 0
 
     def roll_out_optional(chunks):
       result = []
@@ -283,6 +284,8 @@ class ClangWrapper():
 
       return [word] + result
 
+
+    placeholder_num = 1
     for chunk in result.string:
 
       if chunk.isKindInformative():
@@ -299,14 +302,15 @@ class ClangWrapper():
 
       if chunk.isKindOptional():
         for optional_arg in roll_out_optional(chunk.string):
-          if place_markers_for_optional_args:
-            word += ''
-          info += optional_arg + "=?"
+          snippet += ('${%s:[%s]}' % (placeholder_num, optional_arg))
+          placeholder_num += 1
+          info += "["+optional_arg+"]"
 
       if chunk.isKindPlaceHolder():
-        word += ''
+        snippet += ('${%s:%s}' % (placeholder_num, chunk_spelling))
+        placeholder_num += 1
       else:
-        word += chunk_spelling
+        snippet += chunk_spelling
 
       info += chunk_spelling
 
@@ -315,12 +319,13 @@ class ClangWrapper():
     if returnValue:
       menu = self._decode(returnValue.spelling) + " " + menu
 
+    completion = dict()
     completion['word'] = abbr
     completion['abbr'] = abbr
+    completion['snippet'] = snippet
     completion['menu'] = menu
     completion['info'] = info
     completion['dup']  = 1
-
     return completion
 
   def getAbbr(self, strings):
@@ -346,6 +351,7 @@ class ClangWrapper():
       return
     if not preview:
       self.vim.current.window.cursor = (line, column - 1)
+
 
   def gotoDeclaration(self, preview=True):
     params = self.getCompileParams(self.vim.current.buffer.name)

@@ -73,11 +73,7 @@ class Source(Base):
 
         results = cr.results
 
-        base = typed[startcol-1:]
-        if base != "":
-            results = [x for x in results if self._clang_wrapper.getAbbr(x.string).startswith(base)]
-
-        matches = list(map(self._clang_wrapper.formatResult, results))
+        matches = list(map(self._clang_wrapper.format_complete_item, results))
 
         # logger.info("src: %s", src)
         logger.info("completion result: %s", matches)
