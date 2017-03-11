@@ -12,8 +12,8 @@ if exists('g:clang_complete_loaded')
 endif
 let g:clang_complete_loaded = 1
 
-au FileType c,cpp,objc,objcpp if g:ClangCompleteInit()  | call s:ClangCompleteBuffer() | endif
-au FileType c.*,cpp.*,objc.*,objcpp.* if g:ClangCompleteInit() | call s:ClangCompleteBuffer() | endif
+au FileType c,cpp      if g:ClangCompleteInit()  | call s:ClangCompleteBuffer() | endif
+au FileType c.*,cpp.*  if g:ClangCompleteInit() | call s:ClangCompleteBuffer() | endif
 
 
 if has('pythonx')
@@ -260,8 +260,6 @@ function! s:isWindows()
   " Check for win32 is enough since it's true on win64
   return has('win32')
 endfunction
-
-let b:col = 0
 
 function! s:GotoDeclaration(preview)
   try
