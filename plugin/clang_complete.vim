@@ -12,7 +12,9 @@ if exists('g:clang_complete_loaded')
 endif
 let g:clang_complete_loaded = 1
 
-au FileType c,cpp      if g:ClangCompleteInit()  | call s:ClangCompleteBuffer() | endif
+nnoremap <Plug>(clang_complete_goto_declaration)            :call g:ClangGotoDeclaration()<CR>
+nnoremap <Plug>(clang_complete_goto_declaration_preview)    :call g:ClangGotoDeclarationPreview()<CR>
+au FileType c,cpp      if g:ClangCompleteInit() | call s:ClangCompleteBuffer() | endif
 au FileType c.*,cpp.*  if g:ClangCompleteInit() | call s:ClangCompleteBuffer() | endif
 
 
@@ -61,8 +63,6 @@ endif
 function! g:ClangCompleteInit()
 
   call g:ClangLoadUserOptions()
-
-  let b:clang_complete_changedtick = b:changedtick
 
   if s:initClangCompletePython() != 1
     return 0

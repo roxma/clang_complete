@@ -41,6 +41,13 @@ let g:clang_library_path='/usr/lib/llvm-3.8/lib'
 let g:clang_library_path='/usr/lib64/libclang.so.3.8'
 ```
 
+- Goto declaration.
+
+```vim
+" <Plug>(clang_complete_goto_declaration_preview)
+au FileType c,cpp  nmap gd <Plug>(clang_complete_goto_declaration)
+```
+
 - Compiler options can be configured in a `.clang_complete` file in each project
   root.  Example of `.clang_complete` file:
 
