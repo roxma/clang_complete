@@ -322,7 +322,8 @@ class ClangWrapper():
     completion = dict()
     completion['word'] = abbr
     completion['abbr'] = abbr
-    completion['snippet'] = snippet
+    if snippet!=abbr:
+      completion['snippet'] = snippet
     completion['menu'] = menu
     completion['info'] = info
     completion['dup']  = 1
