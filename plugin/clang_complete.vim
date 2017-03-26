@@ -47,7 +47,7 @@ func! s:pyxcall(func,...)
 		call add(l:args,'json.loads(vim.eval("json_encode(a:'.l:i.')"))')
 		let l:i += 1
 	endwhile
-	return s:pyeval(a:func . '(' . join(l:args,',') . ')')
+	return json_decode(s:pyeval('json.dumps(' . a:func . '(' . join(l:args,',') . '))'))
 	" return l:args
 endfunc
 
