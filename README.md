@@ -59,6 +59,13 @@ au FileType c,cpp  nmap gd <Plug>(clang_complete_goto_declaration)
 -I/usr/include/c++/4.5.3/x86_64-slackware-linux/
 ```
 
+- Integrate with neomake
+
+```vim
+	let g:neomake_cpp_enabled_makers = ['clang']
+	let g:neomake_c_enabled_makers = ['clang']
+```
+
 ## License
 
 See doc/clang_complete.txt for help and license.
