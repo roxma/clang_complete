@@ -29,6 +29,8 @@ def getLogger(name):
         return level
     logger = logging.getLogger(__name__)
     logger.setLevel(get_loglevel())
+    # for vim8, avoid the no handler error
+    logger.addHandler(logging.NullHandler())
     return logger
 
 logger = getLogger(__name__)
