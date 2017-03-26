@@ -19,11 +19,14 @@ au FileType c.*,cpp.*  if g:ClangCompleteInit() | call s:ClangCompleteBuffer() |
 
 
 if has('pythonx')
-  let s:py_cmd = 'pythonx'
+  let s:py = 'pythonx'
+  let s:pyeval = function('pyxeval')
 elseif has('python')
-  let s:py_cmd = 'python'
+  let s:py = 'python'
+  let s:pyeval = function('pyeval')
 elseif has('python3')
-  let s:py_cmd = 'python3'
+  let s:py = 'python3'
+  let s:pyeval = function('py3eval')
 endif
 
 if !has('python') && !has('python3')
@@ -32,6 +35,22 @@ if !has('python') && !has('python3')
   echoe 'Compile vim with python support to use libclang'
   finish
 endif
+
+" elegant python function call wrapper
+func! s:pyxcall(func,...)
+	execute s:py . ' import vim'
+	execute s:py . ' import json'
+	let l:i = 1
+	let l:cnt = len(a:000)
+	let l:args = []
+	while l:i <= l:cnt
+		call add(l:args,'json.loads(vim.eval("json_encode(a:'.l:i.')"))')
+		let l:i += 1
+	endwhile
+	return s:pyeval(a:func . '(' . join(l:args,',') . ')')
+	" return l:args
+endfunc
+
 
 " global options
 
@@ -221,15 +240,16 @@ function! s:initClangCompletePython()
 
   " Only parse the python library once
   if !exists('s:libclang_loaded')
-    execute s:py_cmd 'from libclang import ClangWrapper'
-    execute s:py_cmd 'import vim'
-    execute s:py_cmd 'clangWrapper = ClangWrapper(vim)'
-    execute s:py_cmd "vim.command('let l:res = ' + str(clangWrapper.init()))"
-    if l:res == 0
-      return 0
-    endif
+    execute s:py 'from libclang import ClangWrapper'
+    execute s:py 'import vim'
+    execute s:py 'clangWrapper = ClangWrapper(vim)'
+    let l:res = s:pyxcall('clangWrapper.init')
     let s:libclang_loaded = 1
   endif
+
+  " integrate with neomake
+  let b:neomake_cpp_clang_args = s:pyxcall('clangWrapper.getCompileParams',expand('%:p'))["args"]
+
   return 1
 endfunction
 
@@ -244,7 +264,7 @@ endfunction
 
 function! s:GotoDeclaration(preview)
   try
-    execute s:py_cmd "clangWrapper.gotoDeclaration(vim.eval('a:preview') == '1')"
+    execute s:py "clangWrapper.gotoDeclaration(vim.eval('a:preview') == '1')"
   catch /^Vim\%((\a\+)\)\=:E37/
     echoe "The current file is not saved, and 'hidden' is not set."
           \ "Either save the file or add 'set hidden' in your vimrc."
