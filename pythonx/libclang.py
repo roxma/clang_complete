@@ -9,7 +9,6 @@ import shlex
 import importlib
 import logging
 import sys
-from neovim.api.common import decode_if_bytes
 
 def getLogger(name):
     def get_loglevel():
@@ -160,7 +159,7 @@ class ClangWrapper():
     args += self.splitOptions(self.vim.eval("b:clang_user_options"))
 
     if filetype is None:
-      filetype = decode_if_bytes(self.vim.current.buffer.options['filetype'])
+      filetype = self._decode(self.vim.current.buffer.options['filetype'])
 
     ftype_param = '-x c'
 
