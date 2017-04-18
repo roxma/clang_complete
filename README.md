@@ -59,6 +59,13 @@ au FileType c,cpp  nmap gd <Plug>(clang_complete_goto_declaration)
 -I/usr/include/c++/4.5.3/x86_64-slackware-linux/
 ```
 
+- Makefile example for auto-generating `.clang_complete`
+
+```make
+.clang_complete: Makefile
+	echo $(CXXFLAGS) > $@
+```
+
 - Integrate with neomake
 
 ```vim
