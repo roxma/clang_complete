@@ -66,6 +66,11 @@ au FileType c,cpp  nmap gd <Plug>(clang_complete_goto_declaration)
 	echo $(CXXFLAGS) > $@
 ```
 
+If you are using cmake, unfortunately, I don't have a decent hack.
+[This](http://stackoverflow.com/questions/14573117/clang-complete-and-cmake)
+might work. Currently I use `make VERBOSE=1` to show the compile command and
+then edit the `.clang_complete` manually.
+
 - Integrate with neomake
 
 ```vim
