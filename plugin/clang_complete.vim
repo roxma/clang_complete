@@ -11,6 +11,7 @@ if exists('g:clang_complete_loaded')
   finish
 endif
 let g:clang_complete_loaded = 1
+let s:libclang_loaded = 0
 
 nnoremap <Plug>(clang_complete_goto_declaration)            :call g:ClangGotoDeclaration()<CR>
 nnoremap <Plug>(clang_complete_goto_declaration_preview)    :call g:ClangGotoDeclarationPreview()<CR>
@@ -229,7 +230,7 @@ endfunction
 function! s:initClangCompletePython()
 
   " Only parse the python library once
-  if !exists('s:libclang_loaded')
+  if ! s:libclang_loaded
     execute s:py 'from libclang import ClangWrapper'
     execute s:py 'import vim'
     execute s:py 'clangWrapper = ClangWrapper(vim)'
@@ -238,7 +239,7 @@ function! s:initClangCompletePython()
   endif
 
   " integrate with neomake
-  let b:neomake_cpp_clang_args = s:pyxcall('clangWrapper.getCompileParams',expand('%:p'))["args"]
+  let b:neomake_cpp_clang_args = s:pyxcall('clangWrapper.getCompileParams',expand('%:p'))["args"] + ['-c']
 
   return 1
 endfunction
