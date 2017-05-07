@@ -15,8 +15,8 @@ let s:libclang_loaded = 0
 
 nnoremap <Plug>(clang_complete_goto_declaration)            :call g:ClangGotoDeclaration()<CR>
 nnoremap <Plug>(clang_complete_goto_declaration_preview)    :call g:ClangGotoDeclarationPreview()<CR>
-au FileType c,cpp      g:ClangCompleteInit()
-au FileType c.*,cpp.*  g:ClangCompleteInit()
+au FileType c,cpp      call g:ClangCompleteInit()
+au FileType c.*,cpp.*  call g:ClangCompleteInit()
 
 
 if has('pythonx')
@@ -239,7 +239,7 @@ function! s:initClangCompletePython()
   endif
 
   " integrate with neomake
-  let b:neomake_cpp_clang_args = s:pyxcall('clangWrapper.getCompileParams',expand('%:p'))["args"] + ['-c']
+  let b:neomake_cpp_clang_args = s:pyxcall('clangWrapper.getCompileParams',expand('%:p'))["args"] + ['-fsyntax-only']
 
   return 1
 endfunction
