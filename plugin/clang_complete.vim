@@ -14,8 +14,8 @@ let g:clang_complete_loaded = 1
 
 nnoremap <Plug>(clang_complete_goto_declaration)            :call g:ClangGotoDeclaration()<CR>
 nnoremap <Plug>(clang_complete_goto_declaration_preview)    :call g:ClangGotoDeclarationPreview()<CR>
-au FileType c,cpp      if g:ClangCompleteInit() | call s:ClangCompleteBuffer() | endif
-au FileType c.*,cpp.*  if g:ClangCompleteInit() | call s:ClangCompleteBuffer() | endif
+au FileType c,cpp      g:ClangCompleteInit()
+au FileType c.*,cpp.*  g:ClangCompleteInit()
 
 
 if has('pythonx')
@@ -90,16 +90,6 @@ function! g:ClangCompleteInit()
   return 1
 
 endfunction
-
-" key mappings, options, autocmd for buffer
-function! s:ClangCompleteBuffer()
-
-  " Disable every autocmd that could have been set for this buffer
-  augroup ClangComplete
-    autocmd! * <buffer>
-  augroup end
-
-endfunc
 
 function! g:ClangLoadUserOptions()
   let b:clang_user_options = ''
