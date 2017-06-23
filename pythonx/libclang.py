@@ -251,7 +251,7 @@ class ClangWrapper():
         subDirs = [f for f in os.listdir(path) if os.path.isdir(path + "/" + f)]
         subDirs = sorted(subDirs) or ['.']
         path = path + "/" + subDirs[-1] + "/include"
-        if canFindBuiltinHeaders(self.index, ["-I" + path]):
+        if self.canFindBuiltinHeaders(self.index, ["-I" + path]):
           return path
       except:
         pass
