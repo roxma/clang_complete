@@ -2,6 +2,8 @@ from __future__ import print_function
 
 from clang.cindex import Config, Index, CompilationDatabase, TranslationUnit, File, SourceLocation, Cursor, TranslationUnitLoadError
 from clang.cindex import CodeCompletionResult
+import glob
+import itertools
 import time
 import threading
 import os
@@ -243,8 +245,11 @@ class ClangWrapper():
             library_path + "/clang",         # opensuse
             library_path + "/",              # Google
             "/usr/lib64/clang",              # x86_64 (openSUSE, Fedora)
-            "/usr/lib/clang"
+            "/usr/lib/clang",
+            "/usr/lib/clang/*",              # centos7
     ]
+    knownPaths = itertools.chain.from_iterable(
+      [glob.glob(path) for path in knownPaths])
 
     for path in knownPaths:
       try:
