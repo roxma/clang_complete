@@ -6,6 +6,7 @@
 # clang python bindings only supports python2
 # https://github.com/llvm-mirror/clang/commit/abdad67b94ad4dad2d655d48ff5f81d6ccf3852e
 
+from __future__ import absolute_import
 from cm import register_source, getLogger, Base
 register_source(name='clang_complete',
                 priority=9,
