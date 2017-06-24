@@ -20,6 +20,12 @@ Here's some of the work in brief.
 - `clang` installed on your system. (eg. `yum install clang clang-devel` or
   `apt-get install libclang-dev`)
 
+To get clang_complete working with
+[NCM](https://github.com/roxma/nvim-complete-manager) you must install the
+[`neovim`](https://pypi.python.org/pypi/neovim/) Python package *for Python 2*.
+clang_complete is invoked with the Python 2 interpreter, not the Python 3
+interpreter, because the clang Python bindings only support Python 2.
+
 ## Installation
 
 Assuming you're using [vim-plug](https://github.com/junegunn/vim-plug).
