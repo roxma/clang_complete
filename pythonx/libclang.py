@@ -70,9 +70,7 @@ class ClangWrapper():
       else:
         suggestion = "Consider setting g:clang_library_path."
 
-      logger.exception("Loading libclang failed, completion won't be available. %s %s ",
-                       suggestion,
-                       exception_msg)
+      self.vim.eval(r'cm#message("error", "Loading libclang failed. %s")' % suggestion)
       return 0
 
     if not self.canFindBuiltinHeaders(self.index):
