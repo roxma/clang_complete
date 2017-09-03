@@ -22,12 +22,12 @@ au FileType c.*,cpp.*  call g:ClangCompleteInit()
 if has('pythonx')
   let s:py = 'pythonx'
   let s:pyeval = function('pyxeval')
-elseif has('python')
-  let s:py = 'python'
-  let s:pyeval = function('pyeval')
 elseif has('python3')
   let s:py = 'python3'
   let s:pyeval = function('py3eval')
+elseif has('python')
+  let s:py = 'python'
+  let s:pyeval = function('pyeval')
 endif
 
 if !has('python') && !has('python3')

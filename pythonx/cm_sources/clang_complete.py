@@ -14,7 +14,6 @@ register_source(name='clang_complete',
                 scoping=True,
                 scopes=['c','cpp'],
                 events=['BufEnter'],
-                python='python2',
                 cm_refresh_patterns=[r'(-\>|\.|::)'],
 )
 
