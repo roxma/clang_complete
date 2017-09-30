@@ -1,4 +1,6 @@
 
+## This project is DEPRECATED! Please Try [ncm-clang](https://github.com/roxma/ncm-clang) instead.
+
 ## Introduction
 
 The original [clang_complete](https://github.com/Rip-Rip/clang_complete) was
