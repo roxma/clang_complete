@@ -1,5 +1,5 @@
 
-## This project is DEPRECATED! Please Try [ncm-clang](https://github.com/roxma/ncm-clang) instead.
+# This project is DEPRECATED! Please Try [ncm-clang](https://github.com/roxma/ncm-clang) instead.
 
 ## Introduction
 
